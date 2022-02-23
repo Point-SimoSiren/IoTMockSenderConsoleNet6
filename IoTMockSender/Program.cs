@@ -3,8 +3,6 @@ using IoTMockSender;
 using Newtonsoft.Json;
 using System.Text;
 
-//"deviceId":4,"time":"2022-02-20T00:00:00","temperature":-4.32,"humidity":43.32,"pressure":1008.22,"command":null,"optional":null
-
 Console.WriteLine("Anna lämpötila");
 double temp = double.Parse(Console.ReadLine());
 
