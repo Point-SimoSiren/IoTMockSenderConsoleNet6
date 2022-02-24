@@ -3,56 +3,86 @@ using IoTMockSender;
 using Newtonsoft.Json;
 using System.Text;
 
-Console.WriteLine("Anna lämpötila");
-double temp = double.Parse(Console.ReadLine());
+HttpClient client = new HttpClient();
+//client.BaseAddress = new Uri("https://iottemperature1001.azurewebsites.net/");
+client.BaseAddress = new Uri("https://localhost:44302/");
 
-Console.WriteLine("Anna kosteus%");
-double hum = double.Parse(Console.ReadLine());
+SILMUKKA:
+Console.WriteLine("Simuloidaksesi ilmadatan lähetystä kirjoita a. Antaaksesi ohjauskomennon kirjoita b. Vahvista painamalla enter.");
+string valinta = Console.ReadLine();
 
-Console.WriteLine("Anna ilmanpaine");
-double press = double.Parse(Console.ReadLine());
+if (valinta.ToLower() == "a")
+{
+
+    Console.WriteLine("Anna lämpötila");
+    double temp = double.Parse(Console.ReadLine());
+
+    Console.WriteLine("Anna kosteus%");
+    double hum = double.Parse(Console.ReadLine());
+
+    Console.WriteLine("Anna ilmanpaine");
+    double press = double.Parse(Console.ReadLine());
+
+    Measurement obj = new Measurement()
+    {
+        DeviceId = 2,
+        Temperature = temp,
+        Humidity = hum,
+        Pressure = press,
+        Time = DateTime.Now
+    };
 
 
-Console.WriteLine("Anna komentona laitenumero <space> on tai off esim. *1 on* tai *1 off*");
-Console.WriteLine("Jos haluat ohittaa paina x");
+    // Muutetaan em. data objekti Jsoniksi
+    string input = JsonConvert.SerializeObject(obj);
+    StringContent content = new StringContent(input, Encoding.UTF8, "application/json");
 
-string? command = null;
-string c = Console.ReadLine().ToLower();
+    // Lähetetään serialisoitu objekti back-endiin Post pyyntönä
+    HttpResponseMessage message = await client.PostAsync("/api/measurements", content);
 
-if (c == "x") {
-        Console.WriteLine("No command this time.");
-    }
-else {
-    command = c;
+
+    // Otetaan vastaan palvelimen vastaus
+    string reply = await message.Content.ReadAsStringAsync();
+
+    Console.WriteLine(reply);
+}
+else
+{
+    Console.WriteLine("Anna komento");
+
+    Command c = new Command();
+    c.Cmd = Console.ReadLine().ToLower();
+
+    // Muutetaan em. data objekti Jsoniksi
+    string input = JsonConvert.SerializeObject(c);
+    StringContent content = new StringContent(input, Encoding.UTF8, "application/json");
+
+    // Lähetetään serialisoitu objekti back-endiin Post pyyntönä
+    HttpResponseMessage message = await client.PostAsync("/api/measurements/command", content);
+
+
+    // Otetaan vastaan palvelimen vastaus
+    string reply = await message.Content.ReadAsStringAsync();
+
+    Console.WriteLine(reply);
 }
 
-Measurement obj = new Measurement()
-{
-    DeviceId = 2,
-    Temperature = temp,
-    Humidity = hum,
-    Pressure = press,
-    Time = DateTime.Now,
-    Command = command
-};
+// Komennon lukeminen get pyynnöllä
+Console.WriteLine("Katsotaan vielä onko IoT laitteelle komentoja");
 
-
-HttpClient client = new HttpClient();
-client.BaseAddress = new Uri("https://iottemperature1001.azurewebsites.net/");
-
-
-// Muutetaan em. data objekti Jsoniksi
-string input = JsonConvert.SerializeObject(obj);
-StringContent content = new StringContent(input, Encoding.UTF8, "application/json");
-
-// Lähetetään serialisoitu objekti back-endiin Post pyyntönä
-HttpResponseMessage message = await client.PostAsync("/api/measurements", content);
-
+HttpResponseMessage commandMsg = await client.GetAsync("/api/measurements/command");
 
 // Otetaan vastaan palvelimen vastaus
-string reply = await message.Content.ReadAsStringAsync();
+string com = await commandMsg.Content.ReadAsStringAsync();
 
-Console.WriteLine(reply);
+Console.WriteLine("Komentotieto vastaanotettu tunnisteella: " + com);
 
-// Stop
-Console.Read();
+Console.WriteLine("Haluatko jatkaa ohjelman käyttämistä? y/n");
+string jatko = Console.ReadLine();
+
+if (jatko.ToLower() == "y")
+{
+    goto SILMUKKA;
+}
+
+
