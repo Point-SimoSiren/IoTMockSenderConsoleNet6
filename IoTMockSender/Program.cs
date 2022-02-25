@@ -4,11 +4,15 @@ using Newtonsoft.Json;
 using System.Text;
 
 HttpClient client = new HttpClient();
-//client.BaseAddress = new Uri("https://iottemperature1001.azurewebsites.net/");
-client.BaseAddress = new Uri("https://localhost:44302/");
+client.BaseAddress = new Uri("https://iottemperature1001.azurewebsites.net/");
+//client.BaseAddress = new Uri("https://localhost:44302/");
 
 SILMUKKA:
-Console.WriteLine("Simuloidaksesi ilmadatan lähetystä kirjoita a. Antaaksesi ohjauskomennon kirjoita b. Vahvista painamalla enter.");
+Console.WriteLine("Simuloidaksesi ilmadatan lähetystä kirjoita a.");
+Console.WriteLine("Antaaksesi ohjauskomennon IoT laitteelle kirjoita b.");
+Console.WriteLine("Simuloidaksesi IoT laitteen tekemää vallitsevan komennon tarkistusta kirjoita c.");
+Console.WriteLine("Vahvista painamalla enter.");
+
 string valinta = Console.ReadLine();
 
 if (valinta.ToLower() == "a")
@@ -46,7 +50,7 @@ if (valinta.ToLower() == "a")
 
     Console.WriteLine(reply);
 }
-else
+else if (valinta.ToLower() == "b")
 {
     Console.WriteLine("Anna komento");
 
@@ -67,15 +71,20 @@ else
     Console.WriteLine(reply);
 }
 
-// Komennon lukeminen get pyynnöllä
-Console.WriteLine("Katsotaan vielä onko IoT laitteelle komentoja");
+else
+{
 
-HttpResponseMessage commandMsg = await client.GetAsync("/api/measurements/command");
+    // Komennon lukeminen get pyynnöllä
+    Console.WriteLine("Katsotaan onko IoT laitteelle komentoja");
 
-// Otetaan vastaan palvelimen vastaus
-string com = await commandMsg.Content.ReadAsStringAsync();
+    HttpResponseMessage commandMsg = await client.GetAsync("/api/measurements/command");
 
-Console.WriteLine("Komentotieto vastaanotettu tunnisteella: " + com);
+    // Otetaan vastaan palvelimen vastaus
+    string com = await commandMsg.Content.ReadAsStringAsync();
+
+    Console.WriteLine("Komentotieto vastaanotettu tunnisteella: " + com);
+
+}
 
 Console.WriteLine("Haluatko jatkaa ohjelman käyttämistä? y/n");
 string jatko = Console.ReadLine();
